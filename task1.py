@@ -32,6 +32,13 @@ events_data = {
 }
 events_df = pd.DataFrame(events_data)
 
+# create ratings dataframe
+ratings_data = {
+    'User Aggregate Rating': [],
+    'User Rating Text': [],
+}
+ratings_df = pd.DataFrame(ratings_data)
+
 for r in restaurants:
     restaurant_id = r['restaurant']['id']
     restaurant_name = r['restaurant']['name']
@@ -40,7 +47,8 @@ for r in restaurants:
     votes = r['restaurant']['user_rating']['votes']
     aggregate_rating = r['restaurant']['user_rating']['aggregate_rating']
     cuisines = r['restaurant']['cuisines']
-    
+    rating_text = r['restaurant']['user_rating']['rating_text']
+
     if 'zomato_events' in r['restaurant']:
         events = r['restaurant']['zomato_events']
         for event in events:
@@ -76,5 +84,14 @@ for r in restaurants:
     new_restaurant_df = pd.DataFrame([new_restaurant_entry])
     restaurants_df = pd.concat([restaurants_df, new_restaurant_df], axis = 0, ignore_index = True)
 
+    # insert new row into the ratings dataframe
+    new_rating_entry = {'User Aggregate Rating': aggregate_rating, 'User Rating Text': rating_text}
+    new_rating_df = pd.DataFrame([new_rating_entry])
+    ratings_df = pd.concat([ratings_df, new_rating_df], axis = 0, ignore_index = True)
+
 restaurants_df.to_csv('restaurants.csv')
 events_df.to_csv('restaurant_events.csv')
+rating_texts = ['Excellent', 'Very Good', 'Good', 'Average', 'Poor']
+ratings_df = ratings_df[ratings_df['User Rating Text'].isin(rating_texts)]
+ratings_df = ratings_df.groupby(['User Rating Text']).min()
+ratings_df.to_csv('ratings.csv')
