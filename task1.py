@@ -10,7 +10,6 @@ restaurants = json_data[0]['restaurants']
 
 # read Country-Code.xlsx
 country_code_df = pd.read_excel('Country-Code.xlsx')
-print(country_code_df)
 
 # create restaurants dataframe
 restaurants_data = {
