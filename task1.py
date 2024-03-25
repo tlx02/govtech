@@ -8,11 +8,15 @@ response = requests.get('https://raw.githubusercontent.com/Papagoat/brain-assess
 json_data = response.json()
 restaurants = json_data[0]['restaurants']
 
+# read Country-Code.xlsx
+country_code_df = pd.read_excel('Country-Code.xlsx')
+print(country_code_df)
+
 # create restaurants dataframe
 restaurants_data = {
     'Restaurant Id': [],
     'Restaurant Name': [],
-    'Country': [],
+    'Country_code': [],
     'City': [],
     'User Rating Votes': [],
     'User Aggregate Rating': [],
@@ -43,7 +47,7 @@ for r in restaurants:
     restaurant_id = r['restaurant']['id']
     restaurant_name = r['restaurant']['name']
     city = r['restaurant']['location']['city']
-    country = r['restaurant']['location']['country_id']
+    country_code = r['restaurant']['location']['country_id']
     votes = r['restaurant']['user_rating']['votes']
     aggregate_rating = r['restaurant']['user_rating']['aggregate_rating']
     cuisines = r['restaurant']['cuisines']
@@ -79,7 +83,7 @@ for r in restaurants:
                 events_df = pd.concat([events_df, new_event_df], axis = 0, ignore_index = True)
   
     # insert new row into the restaurants dataframe
-    new_restaurant_entry = {'Restaurant Id': restaurant_id, 'Restaurant Name': restaurant_name, 'Country': country, 'City': city, 
+    new_restaurant_entry = {'Restaurant Id': restaurant_id, 'Restaurant Name': restaurant_name, 'Country_code': country_code, 'City': city, 
                  'User Rating Votes': votes, 'User Aggregate Rating': aggregate_rating, 'Cuisines': cuisines}
     new_restaurant_df = pd.DataFrame([new_restaurant_entry])
     restaurants_df = pd.concat([restaurants_df, new_restaurant_df], axis = 0, ignore_index = True)
@@ -89,8 +93,15 @@ for r in restaurants:
     new_rating_df = pd.DataFrame([new_rating_entry])
     ratings_df = pd.concat([ratings_df, new_rating_df], axis = 0, ignore_index = True)
 
+# obtain country from country code for each restaurant
+restaurants_df = pd.merge(restaurants_df, country_code_df, left_on='Country_code', right_on='Country Code')
+restaurants_df = restaurants_df.drop(['Country_code', 'Country Code'], axis = 1)
 restaurants_df.to_csv('restaurants.csv')
+
+# save events dataframe
 events_df.to_csv('restaurant_events.csv')
+
+# obtain the threshold for each rating text
 rating_texts = ['Excellent', 'Very Good', 'Good', 'Average', 'Poor']
 ratings_df = ratings_df[ratings_df['User Rating Text'].isin(rating_texts)]
 ratings_df = ratings_df.groupby(['User Rating Text']).min()
